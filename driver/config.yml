@@ -1,0 +1,5 @@
+name: 'WLED'
+packageKey: 'WLED'
+permissions:
+  lan: {}
+  discovery: {}
