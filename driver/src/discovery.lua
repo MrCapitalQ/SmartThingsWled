@@ -19,29 +19,24 @@ end
 
 local discovery = {}
 function discovery.start(driver, opts, cons)
-    log.debug('Starting discovery')
+    log.trace('Starting discovery...')
     while true do
         local results = mdns.query('_http._tcp', 5)
         if (results) then
             for _, ip_address in pairs(results) do
-                log.debug('Found potential device - ' .. ip_address)
-
-                local deviceInfo = wled_client.info(ip_address)
-                if deviceInfo then
-                    log.debug(ip_address .. ' WLED device found! ')
+                local network_id = string.format("%s:80", ip_address)
+                local device_info = wled_client.info(network_id)
+                if device_info then
+                    log.trace(ip_address .. ' WLED device found! ')
                     local device = {
-                        network_id = string.format("%s:80", ip_address),
-                        name = deviceInfo.name,
-                        manufacturer = deviceInfo.brand,
-                        model = deviceInfo.arch
+                        network_id = network_id,
+                        name = device_info.name,
+                        manufacturer = device_info.brand,
+                        model = device_info.arch
                     }
                     return create_device(driver, device)
-                else
-                    log.debug(ip_address .. ' is not a WLED device')
                 end
             end
-        else
-            log.debug('no result')
         end
     end
 end

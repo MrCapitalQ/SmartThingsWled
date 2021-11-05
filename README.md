@@ -6,7 +6,7 @@ This is currently very early in development and very non-functional. Because of 
 
 ## Development Roadmap
 - [x] Device discovery and addition to a hub
-- [ ] Device state refresh
+- [x] Device state refresh
 - [ ] Control of entire light strip on/off state
 - [ ] Control of entire light strip light level (dimmer)
 - [ ] Control of entire light strip color by specific color

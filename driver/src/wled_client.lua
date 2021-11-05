@@ -4,7 +4,7 @@ local ltn12 = require('ltn12')
 local socket = require('socket')
 
 local function send_request(ip_address, path, method, request_body)
-    local url = string.format("http://%s:80/%s", ip_address, path)
+    local url = string.format("http://%s/%s", ip_address, path)
     local response_body = {}
     local _, code = http.request({
         url = url,
@@ -29,7 +29,7 @@ function wled_client.ping(ip_address)
     return code == 200
 end
 
-function wled_client.info(ip_address)    
+function wled_client.info(ip_address)
     local code, response_body = send_request(ip_address, 'json/info')
     if code == 200 then
         local device_info, _, err = json.decode(table.concat(response_body))
@@ -40,6 +40,20 @@ function wled_client.info(ip_address)
             return nil
         else
             return device_info
+        end
+    else
+        return nil
+    end
+end
+
+function wled_client.state(ip_address)
+    local code, response_body = send_request(ip_address, 'json/state')
+    if code == 200 then
+        local device_state, _, err = json.decode(table.concat(response_body))
+        if err then
+            return nil
+        else
+            return device_state
         end
     else
         return nil
