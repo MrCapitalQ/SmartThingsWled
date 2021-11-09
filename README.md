@@ -11,8 +11,10 @@ This is currently very early in development and very non-functional. Because of 
 - [x] Control of entire light strip light level (dimmer)
 - [x] Control of entire light strip color by specific color
 - [x] Control of entire light strip color by white light temperature
-- [ ] Healthcheck support
+- [x] Healthcheck support*
 - [ ] Device state updates from device
+
+\* *Healthcheck works and updates the online status of the device but the custom HTTP request timeout doesn't seem to be working. This means it'll take the default 60s instead of the intended 5s after the refresh command before marking the device as offline.*
 
 Additional features will be considered in the future once these are complete. At this time, these are considered the essential capabilities of this device driver.
 

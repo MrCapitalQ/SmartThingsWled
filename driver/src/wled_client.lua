@@ -3,7 +3,12 @@ local json = require 'dkjson'
 local ltn12 = require('ltn12')
 local socket = require('socket')
 local log = require('log')
-local utils = require('st.utils')
+
+local function create_tcp_socket()
+    local tcp = socket.tcp()
+    tcp:settimeout(2)
+    return tcp
+end
 
 local function send_request(ip_address, path, method, data)
     local http_verb = method or 'GET'
@@ -28,12 +33,7 @@ local function send_request(ip_address, path, method, data)
         source = ltn12.source.string(request_body),
         sink = ltn12.sink.table(response_body),
         headers = headers,
-        -- Set timeout
-        create = function()
-            local sock = socket.tcp()
-            sock:settimeout(5)
-            return sock
-        end
+        create = create_tcp_socket
     })
 
     log.trace('Received response code ' .. code)
@@ -53,7 +53,12 @@ end
 local wled_client = {}
 
 function wled_client.ping(ip_address)
-    local code = send_request(ip_address, 'win')
+    local url = string.format("http://%s/win", ip_address)
+    log.trace('Pinging url ' .. url)
+
+    local _, code = http.request({url = url, create = create_tcp_socket})
+
+    log.trace('Received ping response code ' .. code)
     return code == 200
 end
 
