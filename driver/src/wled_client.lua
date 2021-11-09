@@ -6,8 +6,9 @@ local log = require('log')
 local utils = require('st.utils')
 
 local function send_request(ip_address, path, method, data)
+    local http_verb = method or 'GET'
     local url = string.format("http://%s/%s", ip_address, path)
-    log.trace('Making web request to ' .. url)
+    log.trace('Making ' .. http_verb .. ' request to ' .. url)
 
     local request_body = nil
     local headers = {}
@@ -35,7 +36,7 @@ local function send_request(ip_address, path, method, data)
         end
     })
 
-    log.trace('Received responsee code ' .. code)
+    log.trace('Received response code ' .. code)
     if code == 200 then
         local device_state, _, err = json.decode(table.concat(response_body))
         if err then
@@ -82,13 +83,13 @@ function wled_client.set_brightness(ip_address, brightness)
     return send_request(ip_address, 'json/state', 'POST', request)
 end
 
-function wled_client.set_color(ip_address, r, g, b)
+function wled_client.set_color(ip_address, r, g, b, w)
     local request = {
         seg = {
             [1] = {
                 start = 0,
                 stop = -1,
-                col = {[1] = {[1] = r, [2] = g, [3] = b}}
+                col = {[1] = {[1] = r, [2] = g, [3] = b, [4] = (w or 0)}}
             }
         },
         v = true

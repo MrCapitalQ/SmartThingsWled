@@ -10,7 +10,7 @@ This is currently very early in development and very non-functional. Because of 
 - [x] Control of entire light strip on/off state
 - [x] Control of entire light strip light level (dimmer)
 - [x] Control of entire light strip color by specific color
-- [ ] Control of entire light strip color by white light temperature
+- [x] Control of entire light strip color by white light temperature
 - [ ] Healthcheck support
 - [ ] Device state updates from device
 

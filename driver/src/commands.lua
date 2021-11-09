@@ -10,7 +10,8 @@ local function match_max_scale(input_color, output_color)
     if max_out ~= 0 then factor = max_in / max_out end
     return utils.round(output_color[1] * factor),
            utils.round(output_color[2] * factor),
-           utils.round(output_color[3] * factor)
+           utils.round(output_color[3] * factor),
+           utils.round((output_color[4] or 0) * factor)
 end
 
 local function rgbw_to_rgb(r, g, b, w)
@@ -24,6 +25,55 @@ local function rgbw_to_rgb(r, g, b, w)
     -- output doesn't overflow.
     return
         match_max_scale({r, g, b, w}, {converted_r, converted_g, converted_b})
+end
+
+local function rgb_to_rgbw(r, g, b)
+    -- Convert an rgb color to an rgbw representation.
+
+    -- Calculate the white channel as the minimum of input rgb channels.
+    -- Subtract the white portion from the remaining rgb channels.
+    local w = math.min(r, g, b)
+    local converted_r = r - w
+    local converted_g = g - w
+    local converted_b = b - w
+
+    -- Match the output maximum value to the input. This ensures the full
+    -- channel range is used.
+    return match_max_scale({r, g, b}, {r, g, b, w})
+end
+
+local function color_temperature_to_rgb(kelvin)
+    local temp = kelvin / 100;
+
+    local red
+    local green
+    local blue;
+
+    if (temp <= 66) then
+        red = 255;
+
+        green = temp;
+        green = 99.4708025861 * math.log(green) - 161.1195681661;
+
+        if (temp <= 19) then
+            blue = 0;
+        else
+            blue = temp-10;
+            blue = 138.5177312231 * math.log(blue) - 305.0447927307;
+        end
+    else
+        red = temp - 60;
+        red = 329.698727446 * (red ^ -0.1332047592);
+
+        green = temp - 60;
+        green = 288.1221695283 * (green ^ -0.0755148492);
+
+        blue = 255;
+    end
+
+    return utils.round(utils.clamp_value(red, 0, 255)),
+           utils.round(utils.clamp_value(green, 0, 255)),
+           utils.round(utils.clamp_value(blue, 0, 255))
 end
 
 local function update_device_state(device, device_state) -- Refresh Switch
@@ -43,8 +93,8 @@ local function update_device_state(device, device_state) -- Refresh Switch
     local rgbw = first_segment.col[1];
     local r, g, b = rgbw_to_rgb(rgbw[1], rgbw[2], rgbw[3], rgbw[4])
     local hue, saturation = utils.rgb_to_hsl(r, g, b)
-    device:emit_event(capabilities.colorControl.saturation(saturation))
     device:emit_event(capabilities.colorControl.hue(hue))
+    device:emit_event(capabilities.colorControl.saturation(saturation))
 end
 
 local command_handler = {}
@@ -99,7 +149,11 @@ end
 
 function command_handler.set_color_temperature(_, device, command)
     log.trace('Handling color temperature command')
-    local temperature = command.args.temperature
+
+    local temperature = utils.round(command.args.temperature / 50) * 50
+    local r, g, b = color_temperature_to_rgb(temperature)
+    local device_state = wled_client.set_color(device.device_network_id, r, g, b, 255)
+    if (device_state) then update_device_state(device, device_state) end
     device:emit_event(capabilities.colorTemperature.colorTemperature(temperature))
 end
 
