@@ -3,8 +3,9 @@ local commands = require('commands')
 local discovery = require('discovery')
 local driver = require('st.driver')
 local lifecycles = require('lifecycles')
+local listener = require('listener')
 
-local wledDriver = driver('WLED', {
+local wled_driver = driver('WLED', {
     discovery = discovery.start,
     lifecycle_handlers = lifecycles,
     supported_capabilities = {
@@ -38,4 +39,6 @@ local wledDriver = driver('WLED', {
     }
 })
 
-wledDriver:run()
+listener.start(wled_driver)
+
+wled_driver:run()
