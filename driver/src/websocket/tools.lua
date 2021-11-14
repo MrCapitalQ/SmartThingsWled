@@ -1,6 +1,4 @@
 local bit = require'websocket.bit'
--- local mime = require'mime'
-local base64 = require'base64'
 local rol = bit.rol
 local bxor = bit.bxor
 local bor = bit.bor
@@ -108,7 +106,7 @@ local sha1_wiki = function(msg)
     until next > 64
     assert(#words==16)
     for i=17,80 do
-      words[i] = bxor(words[i-3],words[i-8],words[i-14],words[i-16])
+      words[i] = bxor(bxor(bxor(words[i-3],words[i-8]),words[i-14]),words[i-16])
       words[i] = rol(words[i],1)
     end
     local a = h0
@@ -123,13 +121,13 @@ local sha1_wiki = function(msg)
         f = bor(band(b,c),band(bnot(b),d))
         k = 0x5A827999
       elseif i > 20 and i < 41 then
-        f = bxor(b,c,d)
+        f = bxor(bxor(b,c),d)
         k = 0x6ED9EBA1
       elseif i > 40 and i < 61 then
-        f = bor(band(b,c),band(b,d),band(c,d))
+        f = bor(bor(band(b,c),band(b,d)),band(c,d))
         k = 0x8F1BBCDC
       elseif i > 60 and i < 81 then
-        f = bxor(b,c,d)
+        f = bxor(bxor(b,c),d)
         k = 0xCA62C1D6
       end
 
@@ -159,20 +157,22 @@ local sha1_wiki = function(msg)
   return write_int32(h0)..write_int32(h1)..write_int32(h2)..write_int32(h3)..write_int32(h4)
 end
 
-local b='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/' 
+local b='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
 
 local base64_encode = function(data)
-  
-  return ((data:gsub('.', function(x) 
-    local r,b='',x:byte()
-    for i=8,1,-1 do r=r..(b%2^i-b%2^(i-1)>0 and '1' or '0') end
-    return r;
-end)..'0000'):gsub('%d%d%d?%d?%d?%d?', function(x)
-    if (#x < 6) then return '' end
-    local c=0
-    for i=1,6 do c=c+(x:sub(i,i)=='1' and 2^(6-i) or 0) end
-    return b:sub(c+1,c+1)
-end)..({ '', '==', '=' })[#data%3+1])
+
+  return ((data:gsub('.', function(x)
+      local r, b = '', x:byte()
+      for i = 8, 1, -1 do
+          r = r .. (b % 2 ^ i - b % 2 ^ (i - 1) > 0 and '1' or '0')
+      end
+      return r;
+  end) .. '0000'):gsub('%d%d%d?%d?%d?%d?', function(x)
+      if (#x < 6) then return '' end
+      local c = 0
+      for i = 1, 6 do c = c + (x:sub(i, i) == '1' and 2 ^ (6 - i) or 0) end
+      return b:sub(c + 1, c + 1)
+  end) .. ({'', '==', '='})[#data % 3 + 1])
 end
 
 local DEFAULT_PORTS = {ws = 80, wss = 443}

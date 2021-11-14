@@ -11,8 +11,7 @@ local receive = function(self)
   end
   local first_opcode
   local frames
---  local bytes = 3
-  local bytes = 2
+  local bytes = 3
   local encoded = ''
 
   local clean = function(was_clean,code,reason)
@@ -60,8 +59,7 @@ local receive = function(self)
         elseif opcode ~= frame.CONTINUATION then
           return clean(false,1002,'protocol error')
         end
---        bytes = 3
-        bytes = 2
+        bytes = 3
         encoded = ''
         tinsert(frames,decoded)
       elseif not frames then
@@ -132,23 +130,8 @@ local connect = function(self,ws_url,ws_protocol,ssl_params)
     return nil,err,nil
   end
   if protocol == 'wss' then
-    self.sock, err = ssl.wrap(self.sock, ssl_params)
-    if self.sock == false then
-      return nil, 'failed to setup ssl socket'
-    else
-      local succ, msg
-      self.sock:sni(host)
-      while not succ do
-        succ, msg = self.sock:dohandshake()
-        if msg == "wantread" then
-          socket.select({self.sock}, nil)
-        elseif msg == "wantwrite" then
-          socket.select(nil, {self.sock})
-        elseif msg then
-          return nil, 'SSL handshake failed, err:' + msg
-        end
-      end
-    end
+    self.sock = ssl.wrap(self.sock, ssl_params)
+    self.sock:dohandshake()
   elseif protocol ~= "ws" then
     return nil, 'bad protocol'
   end
@@ -183,10 +166,10 @@ local connect = function(self,ws_url,ws_protocol,ssl_params)
   local response = table.concat(resp,'\r\n')
   local headers = handshake.http_headers(response)
   local expected_accept = handshake.sec_websocket_accept(key)
-  -- if headers['sec-websocket-accept'] ~= expected_accept then
-  --   local msg = 'Websocket Handshake failed: Invalid Sec-Websocket-Accept (expected %s got %s)'
-  --   return nil,msg:format(expected_accept,headers['sec-websocket-accept'] or 'nil'),headers
-  -- end
+  if headers['sec-websocket-accept'] ~= expected_accept then
+    local msg = 'Websocket Handshake failed: Invalid Sec-Websocket-Accept (expected %s got %s)'
+    return nil,msg:format(expected_accept,headers['sec-websocket-accept'] or 'nil'),headers
+  end
   self.state = 'OPEN'
   return true,headers['sec-websocket-protocol'],headers,self.sock
 end

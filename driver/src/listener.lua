@@ -1,6 +1,5 @@
 local json = require 'dkjson'
 local log = require('log')
-local utils = require('st.utils')
 local ws = require('websocket.client').sync({timeout = 30})
 
 local handler

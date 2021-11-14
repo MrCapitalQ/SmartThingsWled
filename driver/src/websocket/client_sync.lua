@@ -1,4 +1,3 @@
---local socket = require'socket'
 local socket = require'cosock'.socket
 local sync = require'websocket.sync'
 local tools = require'websocket.tools'
