@@ -76,7 +76,9 @@ local function color_temperature_to_rgb(kelvin)
            utils.round(utils.clamp_value(blue, 0, 255))
 end
 
-local function update_device_state(device, device_state) -- Refresh Switch
+local command_handler = {}
+
+function command_handler.update_device_state(device, device_state) -- Refresh Switch
     -- Refresh Switch
     if (device_state.on == true) then
         device:emit_event(capabilities.switch.switch.on())
@@ -97,8 +99,6 @@ local function update_device_state(device, device_state) -- Refresh Switch
     device:emit_event(capabilities.colorControl.saturation(saturation))
 end
 
-local command_handler = {}
-
 -- Ping command
 function command_handler.ping(_, _, device)
     log.trace('Handling ping command')
@@ -114,7 +114,7 @@ function command_handler.refresh(_, device)
     -- Define online status on if getting the device state was successful
     if (device_state) then
         device:online()
-        update_device_state(device, device_state)
+        command_handler.update_device_state(device, device_state)
     else
         device:offline()
     end
@@ -126,7 +126,7 @@ function command_handler.on_off(_, device, command)
 
     local is_on = command.command == 'on'
     local device_state = wled_client.set_power(device.device_network_id, is_on)
-    if (device_state) then update_device_state(device, device_state) end
+    if (device_state) then command_handler.update_device_state(device, device_state) end
 end
 
 -- Switch Level command
@@ -135,7 +135,7 @@ function command_handler.set_level(_, device, command)
 
     local brightness = utils.clamp_value(utils.round(command.args.level * 2.55), 1, 255)
     local device_state = wled_client.set_brightness(device.device_network_id, brightness)
-    if (device_state) then update_device_state(device, device_state) end
+    if (device_state) then command_handler.update_device_state(device, device_state) end
 end
 
 -- Color Control command
@@ -144,7 +144,7 @@ function command_handler.set_color(_, device, command)
 
     local r, g, b = utils.hsl_to_rgb(command.args.color.hue, command.args.color.saturation)
     local device_state = wled_client.set_color(device.device_network_id, r, g, b)
-    if (device_state) then update_device_state(device, device_state) end
+    if (device_state) then command_handler.update_device_state(device, device_state) end
 end
 
 function command_handler.set_color_temperature(_, device, command)
@@ -153,7 +153,7 @@ function command_handler.set_color_temperature(_, device, command)
     local temperature = utils.round(command.args.temperature / 50) * 50
     local r, g, b = color_temperature_to_rgb(temperature)
     local device_state = wled_client.set_color(device.device_network_id, r, g, b, 255)
-    if (device_state) then update_device_state(device, device_state) end
+    if (device_state) then command_handler.update_device_state(device, device_state) end
     device:emit_event(capabilities.colorTemperature.colorTemperature(temperature))
 end
 
