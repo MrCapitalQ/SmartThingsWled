@@ -14,9 +14,9 @@ function listener.start(driver)
             'Received from ' .. (ip or '?') .. ':' .. (port or '?') .. ' ' ..
                 utils.stringify_table(data))
     end)
-    assert(udp:setoption('broadcast', true))
+    assert(udp:setoption('reuseaddr', true))
     assert(udp:settimeout(2))
-    assert(udp:setsockname('*', 0))
+    assert(udp:setsockname('239.255.255.250', 21324))
     local _, p = udp:getsockname()
     log.debug('Listening on port ' .. p .. '...')
 end
