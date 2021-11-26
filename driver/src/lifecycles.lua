@@ -1,4 +1,5 @@
 local commands = require('commands')
+local listener = require('listener')
 
 local lifecycle_handler = {}
 
@@ -19,10 +20,8 @@ function lifecycle_handler.added(_, device)
     commands.ping(nil, nil, device)
 end
 
-function lifecycle_handler.removed(_, device)
-    -- Remove Schedules created under
-    -- device.thread to avoid unnecessary
-    -- CPU processing.
+function lifecycle_handler.removed(driver, device)
+    listener.stop(driver, device)
     for timer in pairs(device.thread.timers) do
         device.thread:cancel_timer(timer)
     end

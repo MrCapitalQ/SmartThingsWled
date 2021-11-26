@@ -42,8 +42,17 @@ local wled_driver = driver('WLED', {
 listener:state_changed(function(device, device_state)
     commands.update_device_state(device, device_state)
 end)
+
+-- TODO: Check if we need to cancel existing timers after driver re-install/updates
+-- for timer in pairs(wled_driver.timers) do
+--     wled_driver:cancel_timer(timer)
+-- end
+
+wled_driver:call_on_schedule(300, function()
+    listener.retry_all_disconnected(wled_driver)
+end, 'Retry connect listeners schedule')
+
 wled_driver:call_with_delay(1,
                             function() listener.start_all(wled_driver) end,
-                            'WebSocket Delayed Connect All')
-
+                            'Listener delayed startup')
 wled_driver:run()

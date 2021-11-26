@@ -78,7 +78,7 @@ end
 
 local command_handler = {}
 
-function command_handler.update_device_state(device, device_state) -- Refresh Switch
+function command_handler.update_device_state(device, device_state)
     -- Refresh Switch
     if (device_state.on == true) then
         device:emit_event(capabilities.switch.switch.on())
@@ -150,11 +150,10 @@ end
 function command_handler.set_color_temperature(_, device, command)
     log.trace('Handling color temperature command')
 
-    local temperature = utils.round(command.args.temperature / 50) * 50
-    local r, g, b = color_temperature_to_rgb(temperature)
+    local r, g, b = color_temperature_to_rgb(command.args.temperature)
     local device_state = wled_client.set_color(device.device_network_id, r, g, b, 255)
     if (device_state) then command_handler.update_device_state(device, device_state) end
-    device:emit_event(capabilities.colorTemperature.colorTemperature(temperature))
+    device:emit_event(capabilities.colorTemperature.colorTemperature(command.args.temperature))
 end
 
 return command_handler
